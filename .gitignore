@@ -12,4 +12,4 @@ doc/api/
 
 # IntelliJ
 .idea/
-/*.iml
+*.iml

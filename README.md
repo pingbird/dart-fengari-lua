@@ -6,8 +6,7 @@
 
 ```yaml
 dependencies:
-  fengari_lua:
-    git: git@github.com:PixelToast/dart-fengari-lua.git
+  fengari_lua: ^1.0.0
 ```
 
 2. Add fengari-web.js to your html:
@@ -30,7 +29,7 @@ import 'package:fengari_lua/lua.dart';
 main() {
   var state = LuaState();
   state.loadString("""
-    print("Hello, World!");
+    print("Hello, World!")
   """);
   state.call();
   state.close();
