@@ -2,7 +2,7 @@
 
 ## Installation
 
-1. Add the following package to your pubspec:
+1. Add the fengari_lua package to your pubspec:
 
 ```yaml
 dependencies:
