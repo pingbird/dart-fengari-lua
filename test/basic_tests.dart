@@ -85,7 +85,6 @@ void main() {
       ];
     }]), equals(["Hello!", 6]));
 
-    debugger();
     expect(state.top, equals(0));
     state.close();
   });
