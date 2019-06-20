@@ -1,7 +1,39 @@
+/// Library to make interacting with Lua states easier, see [LuaState].
+library lua;
 import 'dart:convert';
 import 'dart:js';
 import 'package:fengari_lua/fengari.dart';
 import 'package:quiver/core.dart';
+
+/// Lua base library, pass to [LuaState.requiref].
+int luaBaseLib(LuaState state) => luaopen_base(state.L);
+
+/// Lua coroutine library, pass to [LuaState.requiref].
+int luaCoroutineLib(LuaState state) => luaopen_coroutine(state.L);
+
+/// Lua debug library, pass to [LuaState.requiref].
+int luaDebugLib(LuaState state) => luaopen_debug(state.L);
+
+/// Lua fengari library, pass to [LuaState.requiref].
+int luaFengariLib(LuaState state) => luaopen_fengari(state.L);
+
+/// Lua math library, pass to [LuaState.requiref].
+int luaMathLib(LuaState state) => luaopen_math(state.L);
+
+/// Lua OS library, pass to [LuaState.requiref].
+int luaOSLib(LuaState state) => luaopen_os(state.L);
+
+/// Lua package library, pass to [LuaState.requiref].
+int luaPackageLib(LuaState state) => luaopen_package(state.L);
+
+/// Lua string library, pass to [LuaState.requiref].
+int luaStringLib(LuaState state) => luaopen_string(state.L);
+
+/// Lua table library, pass to [LuaState.requiref].
+int luaTableLib(LuaState state) => luaopen_table(state.L);
+
+/// Lua UTF8 library, pass to [LuaState.requiref].
+int luaUTF8Lib(LuaState state) => luaopen_utf8(state.L);
 
 /// Class for exceptions propagated from Lua, see [LuaState.load]
 /// and [LuaState.call]
@@ -92,7 +124,7 @@ class LuaState {
     }));
   }
 
-  /// Wraps an existing lua state.
+  /// Wraps an existing Lua state.
   LuaState.wrap(lua_State lua_state) : L = lua_state;
 
   /// The index of the top value in the stack.
@@ -175,7 +207,7 @@ class LuaState {
   ///     state.pushGlobalTable();
   ///     state.push(key);
   ///     state.dup(-3); // Get value from what was previously top of stack
-  ///     state.setTable();
+  ///     state.tableSet();
   ///     state.pop(2); // Pop both the global table and original value
   ///
   void setGlobal(dynamic key) {
@@ -230,6 +262,18 @@ class LuaState {
   /// Pops a value from the stack and moves it to [index], replacing the
   /// value in its place.
   void replace(int index) => lua_replace(L, index);
+
+  /// Rotates stack elements between [index] and the top of stack [n] positions.
+  ///
+  /// Positive values rotate towards the top of the stack and negative values
+  /// rotate towards the bottom of the stack, Example:
+  ///
+  ///     state.pushAll(["a", "b", "c", "d"]);
+  ///     state.rotate(-4, 1);
+  ///     expect(state.values(4), equals(["d", "a", "b", "c"]));
+  ///     state.rotate(-4, -3);
+  ///     expect(state.values(4), equals(["c", "d", "a", "b"]));
+  void rotate(int index, int n) => lua_rotate(L, index, n);
 
   /// Same as [LuaState.at].
   dynamic operator[](int index) => at(index);
@@ -304,6 +348,23 @@ class LuaState {
     lua_pop(L, count);
   }
 
+  _convertCFunction(dynamic fn) {
+    if (fn is LuaCFunction) {
+      return allowInterop((lua_State L) => fn(LuaState.wrap(L)));
+    } else if (fn is LuaFunction) {
+      return allowInterop((lua_State L) {
+        var state = LuaState.wrap(L);
+        var ret = fn(state, state.values(state.top));
+        state.pushAll(ret);
+        return ret.length;
+      });
+    } else if (fn is lua_CFunction) {
+      return allowInterop(fn);
+    } else {
+      throw LuaException("Unsupported function type: '${fn.runtimeType}'");
+    }
+  }
+
   /// Pushes a value to the stack, automatically converting Dart types to
   /// their equivalent Lua counterparts.
   ///
@@ -325,22 +386,7 @@ class LuaState {
     } else if (value is JsFunction) {
       lua_pushcfunction(L, value);
     } else if (value is Function) {
-      if (value is LuaCFunction) {
-        lua_pushcfunction(L, allowInterop(
-          (lua_State L) => value(LuaState.wrap(L))
-        ));
-      } else if (value is LuaFunction) {
-        lua_pushcfunction(L, allowInterop(
-          (lua_State L) {
-            var state = LuaState.wrap(L);
-            var ret = value(state, state.values(state.top));
-            state.pushAll(ret);
-            return ret.length;
-          }
-        ));
-      } else {
-        throw LuaException("Unsupported function type: '${value.runtimeType}'");
-      }
+      lua_pushcfunction(L, _convertCFunction(value));
     } else if (value is String) {
       lua_pushstring(L, to_luastring(value));
     } else if (value is LuaState) {
@@ -375,6 +421,54 @@ class LuaState {
 
   /// Same as [LuaState.push] but pushes multiple values.
   void pushAll(Iterable<dynamic> values) => values.forEach(push);
+
+  /// Checks if the value at [index] is nil.
+  bool isNil([int index = -1]) => lua_isnil(L, index);
+
+  /// Checks if [index] is a valid stack index.
+  bool isNone([int index = -1]) => lua_isnone(L, index);
+
+  /// Checks if the value at [index] is nil or if the index is invalid.
+  bool isNoneOrNil([int index = -1]) => lua_isnoneornil(L, index);
+
+  /// Checks if the value at [index] is a number.
+  bool isNumber([int index = -1]) => lua_isnumber(L, index);
+
+  /// Checks if the value at [index] is a string.
+  bool isString([int index = -1]) => lua_isstring(L, index);
+
+  /// Checks if the value at [index] is a table.
+  bool isTable([int index = -1]) => lua_istable(L, index);
+
+  /// Checks if the value at [index] is a thread.
+  bool isThread([int index = -1]) => lua_isthread(L, index);
+
+  /// Checks if the value at [index] is userdata.
+  bool isUserdata([int index = -1]) => lua_isuserdata(L, index);
+
+  /// Checks if the current thread is yieldable.
+  bool isYieldable() => lua_isyieldable(L);
+
+  /// Returns the length of the value at [index], equivalent to the # operator.
+  ///
+  /// This function may invoke the __length metamethod, to avoid this behavior
+  /// use [LuaState.rawlen].
+  int len(int index) => luaL_len(L, index);
+
+  /// Returns the raw length of the value at [index].
+  int rawLen(int index) => lua_rawlen(L, index);
+
+  /// Loads library if not loaded already and pushes it on the stack.
+  ///
+  /// If [global] is true the library is put in _G as [modname].
+  ///
+  /// This function is commonly used to load builtin libraries, Example:
+  ///
+  ///
+  void requiref(String modname, dynamic fn, [bool global = true]) =>
+    luaL_requiref(
+      L, to_luastring(modname), _convertCFunction(fn), global ? 1 : 0
+    );
 
   /// Loads code from a buffer whether it be Lua or compiled bytecode and
   /// pushes the resulting lua function to the stack.
