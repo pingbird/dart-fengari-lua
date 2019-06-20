@@ -1,3 +1,8 @@
+## 1.1.0
+- Fixed several bugs in fengari bindings.
+- Added fengari-interop library.
+- Added many more methods to LuaState, including the ability to load modules.
+
 ## 1.0.0-hotfix.1
 - Added CHANGELOG.md.
 - Added README.md to lua_repl example.
