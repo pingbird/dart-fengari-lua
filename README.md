@@ -6,7 +6,7 @@
 
 ```yaml
 dependencies:
-  fengari_lua: ^1.0.0
+  fengari_lua: ^1.0.1
 ```
 
 2. Add fengari-web.js to your html:

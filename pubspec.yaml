@@ -1,6 +1,6 @@
 name: fengari_lua
 description: Web bindings for Lua 5.3, useful for scripting your web applications.
-version: 1.0.0-hotfix.1
+version: 1.0.1
 homepage: https://github.com/PixelToast/dart-fengari-lua
 author: Andre Lipke <andre.lipke@gmail.com>
 
@@ -10,7 +10,6 @@ environment:
 dependencies:
   js: ^0.6.0
   quiver: '>=2.0.0 <3.0.0'
-
 
 dev_dependencies:
   pedantic: ^1.7.0
