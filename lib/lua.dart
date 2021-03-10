@@ -39,8 +39,11 @@ int luaUTF8Lib(LuaState state) => luaopen_utf8(state.L);
 /// and [LuaState.call]
 class LuaException {
   LuaException(this.message);
-  final message;
-  toString() => message;
+
+  final dynamic message;
+
+  @override
+  String toString() => '$message';
 }
 
 /// Opaque values for types that can't be converted to Dart values.
@@ -61,10 +64,14 @@ class LuaOpaqueValue {
   String name;
   int index;
 
-  toString() => name;
+  @override
+  String toString() => name;
 
-  get hashCode => hash3(type, name, index);
-  operator==(other) =>
+  @override
+  int get hashCode => hash3(type, name, index);
+
+  @override
+  bool operator==(other) =>
     other is LuaOpaqueValue &&
     other.type == type &&
     other.name == name &&
@@ -296,14 +303,10 @@ class LuaState {
   ///
   /// The [start] arg defaults to -[count], meaning it will return the
   /// last [count] values pushed to the stack.
-  List values(int count, [int start]) {
+  List<dynamic> values(int count, [int? start]) {
     start ??= -count;
     if (start < 0) start += lua_gettop(L) + 1;
-    var out = List(count);
-    for (int i = 0; i < count; i++) {
-      out[i] = at(start + i);
-    }
-    return out;
+    return List<dynamic>.generate(count, (i) => at(start! + i));
   }
 
   /// Pops a single value from the stack, returning it.
@@ -348,7 +351,7 @@ class LuaState {
     lua_pop(L, count);
   }
 
-  _convertCFunction(dynamic fn) {
+  dynamic _convertCFunction(dynamic fn) {
     if (fn is LuaCFunction) {
       return allowInterop((lua_State L) => fn(LuaState.wrap(L)));
     } else if (fn is LuaFunction) {
@@ -482,7 +485,7 @@ class LuaState {
       // error string but still call our lua_atnativeerror, at the moment these
       // types of errors are not properly propagated using the LuaException but
       // are logged in console.
-      String e = "Unknown load error $code";
+      var e = "Unknown load error $code";
       if (lua_gettop(L) > t) { // Error string was pushed
         e = popString();
       } // Else error wasn't pushed, Fengari bug.
@@ -523,8 +526,11 @@ class LuaState {
 
   // Since this is just a wrapper we guarantee equality between [LuaState]s
   // that wrap the same internal lua state.
-  get hashCode => L.hashCode;
-  operator ==(other) =>
+  @override
+  int get hashCode => L.hashCode;
+
+  @override
+  bool operator==(other) =>
     other is LuaState &&
     other.L == L;
 }

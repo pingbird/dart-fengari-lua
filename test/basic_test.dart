@@ -38,8 +38,8 @@ void main() {
     var state = LuaState();
     state.loadString('return ...');
 
-    var list = [];
-    for (int i = 0; i < 2; i++) {
+    final list = [];
+    for (var i = 0; i < 2; i++) {
       list.add(i * i);
       state.dup();
       expect(state.call(list), equals(list));
