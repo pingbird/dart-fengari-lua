@@ -1,3 +1,6 @@
+## 1.2.0
+- Migrated to null safety
+
 ## 1.1.0
 - Fixed several bugs in fengari bindings.
 - Added fengari-interop library.

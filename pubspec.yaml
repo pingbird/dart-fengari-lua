@@ -1,6 +1,6 @@
 name: fengari_lua
 description: Web bindings for Lua 5.3, useful for scripting your web applications.
-version: 1.1.0
+version: 1.2.0
 homepage: https://github.com/PixelToast/dart-fengari-lua
 
 environment:

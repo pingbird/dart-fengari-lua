@@ -6,7 +6,7 @@
 
 ```yaml
 dependencies:
-  fengari_lua: ^1.1.0
+  fengari_lua: ^1.2.0
 ```
 
 2. Add fengari-web.js to your html:
@@ -35,3 +35,10 @@ main() {
   state.close();
 }
 ```
+
+## Example
+
+An example project can be found at https://github.com/PixelToast/dart-fengari-lua/tree/master/example/lua_repl, it
+provides a simple web based REPL:
+
+![Screenshot of REPL](https://raw.githubusercontent.com/PixelToast/dart-fengari-lua/master/example/lua_repl/screenshot.png)
